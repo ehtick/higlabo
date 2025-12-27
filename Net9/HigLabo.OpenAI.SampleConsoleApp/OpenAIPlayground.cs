@@ -22,7 +22,7 @@ public class OpenAIPlayground
     public async ValueTask ExecuteAsync()
     {
         SetOpenAISetting();
-        await ResponseCreateDeepResearch();
+        await ResponsePlaygroundPromptIdCreate();
         Console.WriteLine("■Completed");
     }
     private void SetOpenAISetting()
@@ -115,7 +115,7 @@ public class OpenAIPlayground
         {
             ServiceProvider.Groq => "llama3-70b-8192",
             ServiceProvider.DeepSeek => "deepseek-chat",
-            _ => "gpt-4o",
+            _ => "gpt-5",
         };
         var res = await cl.ChatCompletionCreateAsync(p);
         foreach (var choice in res.Choices)
@@ -149,7 +149,7 @@ public class OpenAIPlayground
         {
             ServiceProvider.Groq => "llama3-70b-8192",
             ServiceProvider.DeepSeek => "deepseek-chat",
-            _ => "gpt-4o",
+            _ => "gpt-5",
         };
         var result = new ChatCompletionStreamResult();
         await foreach (string text in cl.ChatCompletionCreateStreamAsync("How to enjoy coffee?", model, result, CancellationToken.None))
@@ -172,7 +172,7 @@ public class OpenAIPlayground
 
         var p = new ChatCompletionCreateParameter();
         p.AddUserMessage($"How to enjoy coffee");
-        p.Model = "gpt-4o";
+        p.Model = "gpt-5";
         if (cl.ServiceProvider == ServiceProvider.OpenAI)
         {
             p.Stream_Options = new
@@ -208,7 +208,7 @@ public class OpenAIPlayground
         vMessage.AddTextContent("Please describe this image.");
         vMessage.AddImageFile(Path.Combine(Environment.CurrentDirectory, "Image", "Pond.jpg"));
         p.Messages.Add(vMessage);
-        p.Model = "gpt-4o";
+        p.Model = "gpt-5";
         p.Max_Completion_Tokens = 300;
         p.Stream = true;
 
@@ -229,7 +229,7 @@ public class OpenAIPlayground
         p.Model = cl.ServiceProvider switch
         {
             ServiceProvider.Groq => "llama3-70b-8192",
-            _ => "gpt-4o",
+            _ => "gpt-5",
         };
 
         //Use anonymous object to define json schema.
@@ -338,7 +338,7 @@ public class OpenAIPlayground
         var cl = OpenAIClient;
 
         var p = new ResponseCreateParameter();
-        p.Model = "gpt-4o";
+        p.Model = "gpt-5";
         p.Input.AddUserMessage("How to enjoy coffee?");
         var res = await cl.ResponseCreateAsync(p, CancellationToken.None);
         foreach (var output in res.Output)
@@ -516,7 +516,7 @@ public class OpenAIPlayground
         var location = "Newyork";
 
         var p = new ResponseCreateParameter();
-        p.Model = "gpt-4o";
+        p.Model = "gpt-5";
         p.Input.AddUserMessage($"How to enjoy coffee near by {location}? Please search shop list from web.");
         p.Tools = [];
         p.Tools.Add(new Tool("web_search"));
@@ -646,7 +646,7 @@ public class OpenAIPlayground
         var storeId = await GetVectorStoreId();
 
         var p = new ResponseCreateParameter();
-        p.Model = "gpt-4o";
+        p.Model = "gpt-5";
         p.Input.AddUserMessage("I want to know about 1-bit transformers.");
         p.Tools = [];
         p.Tools.Add(new FileSearchTool()
@@ -677,7 +677,7 @@ public class OpenAIPlayground
         var cl = OpenAIClient;
 
         var p = new ResponseCreateParameter();
-        p.Model = "gpt-4o";
+        p.Model = "gpt-5";
         p.Input.AddUserMessage("Please explain about this pdf file.");
         p.Input[0].AddImage("image/jpeg", File.ReadAllBytes(Path.Combine(Environment.CurrentDirectory, "File", "AI_Forecast.pdf")));
 
@@ -714,7 +714,7 @@ public class OpenAIPlayground
         }
         {
             var p = new ResponseCreateParameter();
-            p.Model = "gpt-4o";
+            p.Model = "gpt-5";
             p.Input.AddUserMessage("Please explain about this pdf file.");
             p.Input[0].AddFile(fileId);
 
@@ -851,7 +851,7 @@ public class OpenAIPlayground
         var cl = OpenAIClient;
 
         var p = new ResponseCreateParameter();
-        p.Model = "gpt-4o";
+        p.Model = "gpt-5";
         p.Input.AddUserMessage($"Please tell me about the architecture of this repository. https://github.com/openai/codex");
         p.Tools = [];
         p.Tools.Add(new McpCallTool()
@@ -881,7 +881,7 @@ public class OpenAIPlayground
         var cl = OpenAIClient;
 
         var p = new ResponseCreateParameter();
-        p.Model = "gpt-4o";
+        p.Model = "gpt-5";
         p.Input.AddUserMessage($"Please tell me about the architecture of this repository. https://github.com/openai/codex");
         p.Tools = [];
         p.Tools.Add(new McpCallTool()
@@ -1010,6 +1010,49 @@ public class OpenAIPlayground
         o.Properties.Add("MailAddress", new JsonSchemaProperty("string", "Email address."));
         tool.Parameters = o;
         return tool;
+    }
+
+    private async ValueTask ResponsePlaygroundPromptIdCreate()
+    {
+        https://platform.openai.com/chat/edit?prompt=...
+        var cl = OpenAIClient;
+
+        var p = new ResponseCreateParameter();
+        p.Model = "gpt-5";
+        p.Prompt = new
+        {
+            id = "pmpt_694b4775b7648195bece0747fe6fc32200a14ac5421379d9",
+            version = "1",
+        };
+        p.Reasoning = new();
+        p.Reasoning.Summary = "auto";
+        p.Store = true;
+        p.Include = ["reasoning.encrypted_content", "web_search_call.action.sources"];
+
+        var res = await cl.ResponseCreateAsync(p, CancellationToken.None);
+        foreach (var output in res.Output)
+        {
+            foreach (var content in output.Content)
+            {
+                Console.WriteLine(content.Type);
+                switch (content.Type)
+                {
+                    case "output_text": Console.WriteLine(content.Text); break;
+                    default: break;
+                }
+            }
+        }
+        var p1 = new ResponseCreateParameter();
+        p1.Model = "gpt-5";
+        p1.Previous_Response_Id = res.Id;
+        p1.Input.AddUserMessage("2025-12-15、Higty、オンライン、1件");
+        var result = new ResponseStreamResult();
+        await foreach (string text in cl.ResponseCreateStreamAsync(p1, result, CancellationToken.None))
+        {
+            Console.Write(text);
+        }
+
+        Console.WriteLine("■DONE");
     }
 
     private Tool CreateGetWheatherTool()
@@ -1220,7 +1263,7 @@ public class OpenAIPlayground
 
         var p = new ImagesGenerationsParameter();
         p.Prompt = "A photorealistic image of a beautiful landscape under a blue sky. The scene features a wide, lush green field, with the sun shining brightly and casting soft shadows. The sky is a clear, deep blue with a few fluffy white clouds scattered around. The field is vibrant and green, giving a sense of calm and tranquility. The image should have a high-resolution, 4K-like quality, capturing the details of the grass, the texture of the clouds, and the vividness of the blue sky.";
-        p.Model = "gpt-4o";
+        p.Model = "gpt-5";
         p.Quality = "hd";
 
         Console.WriteLine("Image generate start");

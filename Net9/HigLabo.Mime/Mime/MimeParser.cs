@@ -21,6 +21,7 @@ public unsafe sealed class MimeParser
     }
     public static readonly MimeParserDefaultSettings Default = new MimeParserDefaultSettings();
 
+    private const int GuardBytes = 8; 
     private Stream? _Stream = null;
     private MimeHeaderBufferByteArray _HeaderBuffer = new MimeHeaderBufferByteArray();
     private Byte[]? _Buffer = null;
@@ -63,9 +64,10 @@ public unsafe sealed class MimeParser
 
     private Byte[] GetBuffer()
     {
-        if (_Buffer == null || _Buffer.Length != this.BufferSize)
+        int len = this.BufferSize + GuardBytes;
+        if (_Buffer == null || _Buffer.Length != len)
         {
-            _Buffer = new Byte[this.BufferSize];
+            _Buffer = new byte[len];
         }
         return _Buffer;
     }
@@ -143,38 +145,38 @@ public unsafe sealed class MimeParser
 
         return mg;
     }
-    private String GetRawText(Stream stream)
+    private string GetRawText(Stream stream)
     {
-        Int64? nowPosition = null;
-
-        if (stream.CanSeek == true)
+        long? pos = null;
+        if (stream.CanSeek)
         {
-            nowPosition = stream.Position;
+            pos = stream.Position;
             stream.Position = 0;
         }
-        var target = new MemoryStream();
-        var bb = new Byte[stream.Length];
-        stream.Read(bb, 0, bb.Length);
-        target.Write(bb, 0, bb.Length);
 
-        if (nowPosition.HasValue == true)
+        using var ms = new MemoryStream();
+        stream.CopyTo(ms);
+
+        if (pos.HasValue)
         {
-            stream.Position = nowPosition.Value;
+            stream.Position = pos.Value;
         }
-        return this.Encoding.GetString(target.ToArray());
+        return this.Encoding.GetString(ms.ToArray());
     }
     private void ReadFromStream(MimeStreamBuffer context)
     {
         var buffer = this.GetBuffer();
         var stream = _Stream!;
-        var lastLineLength = 0;
         var lastLine = context.GetLastLine();
+        int lastLineLength = lastLine?.Length ?? 0;
+        int effective = this.BufferSize;
 
-        if (lastLine != null)
+        int filledLength = effective - lastLineLength;
+        if (filledLength < 0)
         {
-            lastLineLength = lastLine.Length;
+            throw new InvalidMimeFormatException("A single line exceeds buffer size.");
         }
-        var filledLength = buffer.Length - lastLineLength - 1;
+
         if (stream.Position + filledLength > stream.Length)
         {
             filledLength = (Int32)(stream.Length - stream.Position);
@@ -185,8 +187,12 @@ public unsafe sealed class MimeParser
             Buffer.BlockCopy(buffer, 0, buffer, lastLineLength, readLength);
             Buffer.BlockCopy(lastLine!, 0, buffer, 0, lastLineLength);
         }
-        buffer[lastLineLength + readLength] = 10;
-        context.Initialize(_BufferPtr, lastLineLength + readLength, readLength == 0);
+        int end = lastLineLength + readLength;
+        for (int i = 0; i < GuardBytes; i++)
+        {
+            buffer[end + i] = 10;
+        }
+        context.Initialize(_BufferPtr, end, readLength == 0);
     }
 
     private unsafe void ReadHeaderAndMessageBody(MimeMessage message, MimeStreamBuffer context)

@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System;
 
+namespace HigLabo.Newtonsoft;
+
 public class NullableUInt16JsonConverter : JsonConverter<ushort?>
 {
     public override ushort? ReadJson(JsonReader reader, Type objectType, ushort? existingValue, bool hasExistingValue, JsonSerializer serializer)

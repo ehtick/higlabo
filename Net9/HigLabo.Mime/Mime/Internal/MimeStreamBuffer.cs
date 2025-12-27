@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -106,18 +107,18 @@ internal unsafe class MimeStreamBuffer
 
         this._Start = this._Current;
         var line_Start = this._Current;
-
-        UInt32 bbbbXor = 0;
-        
+      
         while (true)
         {
-            UInt32* bbbb = (UInt32*)this._Current;
-            do
+            byte* p = this._Current;
+            while (true)
             {
-                bbbbXor = *bbbb++ ^ 0x0A0A0A0A;
-            } while (((bbbbXor - 0x01010101) & ~bbbbXor & 0x80808080) == 0);
-            this._Current = (byte*)(bbbb - 1);
-            // 10 is \n
+                uint v = Unsafe.ReadUnaligned<uint>(ref *p);
+                uint x = v ^ 0x0A0A0A0A;
+                if (((x - 0x01010101) & ~x & 0x80808080) != 0) break;
+                p += 4;
+            }
+            this._Current = p;
             while (*this._Current != 10) { this._Current++; }
 
             if (*line_Start == 46)// .

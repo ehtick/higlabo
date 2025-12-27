@@ -2,6 +2,8 @@
 using System;
 using System.Globalization;
 
+namespace HigLabo.Newtonsoft;
+
 public class NullableDecimalJsonConverter : JsonConverter<decimal?>
 {
     public override decimal? ReadJson(JsonReader reader, Type objectType, decimal? existingValue, bool hasExistingValue, JsonSerializer serializer)

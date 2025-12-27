@@ -2,6 +2,8 @@
 using System;
 using System.Globalization;
 
+namespace HigLabo.Newtonsoft;
+
 public class NullableDoubleJsonConverter : JsonConverter<double?>
 {
     public override double? ReadJson(JsonReader reader, Type objectType, double? existingValue, bool hasExistingValue, JsonSerializer serializer)
