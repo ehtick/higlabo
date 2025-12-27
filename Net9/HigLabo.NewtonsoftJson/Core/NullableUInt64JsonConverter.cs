@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+namespace HigLabo.Newtonsoft;
 
 public class NullableUInt64JsonConverter : JsonConverter<ulong?>
 {

@@ -15,7 +15,7 @@ public class ResponseObject
     public OpenAIServerError? Error { get; set; }
     public string Id { get; set; } = "";
     public IncompleteDetails? Incomplete_Details { get; set; }
-    public string? Instructions { get; set; }
+    public object? Instructions { get; set; }
     public int? Max_Output_Tokens { get; set; }
     public object? MetaData { get; set; }
     public string Model { get; set; } = "";
@@ -47,7 +47,7 @@ public class ResponseObjectResponse : RestApiResponse
     public OpenAIServerError? Error { get; set; }
     public string Id { get; set; } = "";
     public IncompleteDetails? Incomplete_Details { get; set; }
-    public string? Instructions { get; set; }
+    public object? Instructions { get; set; }
     public int? Max_Output_Tokens { get; set; }
     public object? MetaData { get; set; }
     public string Model { get; set; } = "";

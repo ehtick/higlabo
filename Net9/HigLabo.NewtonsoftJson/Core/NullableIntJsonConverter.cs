@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+namespace HigLabo.Newtonsoft;
 
 public class NullableIntJsonConverter : JsonConverter<int?>
 {

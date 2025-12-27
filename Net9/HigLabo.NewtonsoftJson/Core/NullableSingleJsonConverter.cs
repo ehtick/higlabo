@@ -2,6 +2,8 @@
 using System;
 using System.Globalization;
 
+namespace HigLabo.Newtonsoft;
+
 public class NullableSingleJsonConverter : JsonConverter<float?>
 {
     public override float? ReadJson(JsonReader reader, Type objectType, float? existingValue, bool hasExistingValue, JsonSerializer serializer)
